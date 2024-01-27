@@ -1,0 +1,78 @@
+@baseurl=http://127.0.0.1:3001
+###
+GET {{baseurl}}/ping
+
+
+###
+POST {{baseurl}}/balance/add
+Content-Type: application/json
+
+{
+  "user_id": 2,
+  "account": "448484864684684",
+  "balance": 1000.50
+}
+
+###
+POST {{baseurl}}/balance/add
+Content-Type: application/json
+
+{
+  "user_id": 3,
+  "account": "448484864184684",
+  "balance": 9000.50
+}
+
+###
+GET {{baseurl}}/balance/add
+Content-Type: application/json
+
+{
+  "user_id": 2
+}
+
+
+###
+POST {{baseurl}}/balance/reserve
+Content-Type: application/json
+
+{
+    "order_id": "abcd",
+    "user_id": 1,
+    "price": 50
+}
+
+###
+GET {{baseurl}}/balance/reserve
+Content-Type: application/json
+
+{
+    "order_id": "abcd"
+}
+###
+POST {{baseurl}}/balance/reserve
+Content-Type: application/json
+
+
+{
+  "order_id":"1b683c1d-4988-4a99-a1c2-cd2f5c881406",
+  "user_id":1,
+  "price":1000
+}
+
+###
+DELETE {{baseurl}}/balance/reserve
+Content-Type: application/json
+
+{
+    "order_id": "abcd"
+}
+
+###
+POST {{baseurl}}/balance/reserve
+Content-Type: application/json
+
+{
+    "order_id": "abcd",
+    "completed": true
+}
