@@ -8,8 +8,7 @@ POST {{baseurl}}/balance/add
 Content-Type: application/json
 
 {
-  "user_id": 2,
-  "account": "448484864684684",
+  "user_id": 7,
   "balance": 1000.50
 }
 

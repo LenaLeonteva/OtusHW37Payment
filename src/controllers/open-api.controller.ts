@@ -92,7 +92,7 @@ export class OpenApiController {
     },
     description: 'Created balance',
     required: true,
-  }) _requestBody: Balance): Promise<unknown> {
+  }) _requestBody: Balance): Promise<Balance> {
     const id = _requestBody.user_id;
     let sum = 0
     try {
@@ -101,8 +101,13 @@ export class OpenApiController {
       const result = await this.balanceRepo.create(_requestBody)
       return result
     }
-    await this.balanceRepo.updateById(id, {balance: sum + _requestBody.balance})
-    return
+    let balance = sum + _requestBody.balance;
+    await this.balanceRepo.updateById(id, {balance: balance})
+    let result = new Balance();
+    result.account = _requestBody.account;
+    result.balance = balance;
+    result.user_id = _requestBody.user_id;
+    return result
   }
 
   /**
