@@ -5,6 +5,8 @@ import {BalanceReserve} from '../models/balance-reserve.model';
 import {Balance} from '../models/balance.model';
 import {BalanceRepository, BalanceReserveRepository} from '../repositories';
 import {v4 as uuidv4} from 'uuid';
+import { OPS } from '../config';
+
 
 /**
  * The controller class is generated from OpenAPI spec with operations tagged
@@ -112,7 +114,7 @@ export class OpenApiController {
     
     let add= new BalanceReserve();
     //add.order_id=uuidv4();
-    add.operation='add';
+    add.operation=OPS.ADD;
     add.price=_requestBody.balance;
     add.user_id=_requestBody.user_id;
     let result = await this.reserveRepo.create(add);
@@ -279,18 +281,44 @@ export class OpenApiController {
         order_id: orderID,
       }
     };
-    let order=await this.reserveRepo.findOne(filter);
-    let reserved = await this.reserveRepo.findById(order?.id);
-    let userID = reserved.user_id;
+    let orders=await this.reserveRepo.find(filter);
+    let order=new BalanceReserve();
+    let cancelledOrder=0;
+    let createdOrder=0;
+    for (let o of orders) {
+      if (o.operation==OPS.BUY) {
+        createdOrder++;
+        order=o;
+      }
+      if (o.operation==OPS.CANCEL) {
+        cancelledOrder++;
+      }
+    }
+    if (cancelledOrder) {
+      return this.response.status(400).send({
+        error: "Error! The order was cancelled!"
+      });
+    }
+    if (!createdOrder) {
+      return this.response.status(400).send({
+        error: "Error! No such order!"
+      });
+    }
+    //let reserved = await this.reserveRepo.findById(order?.id);
+    let userID = order?.user_id;
     if (!userID) return this.response.status(400).send({
       error: "Error! The user ID does not found!"
     });
     let balance = (await this.balanceRepo.findById(userID)).balance;
-    let 
-    await this.reserveRepo.create()
-    await this.balanceRepo.updateById(userID, {balance: balance - (reserved.price ?? 0)});
+    let cancel=new BalanceReserve();
+    cancel.order_id=order?.order_id;
+    cancel.operation=OPS.CANCEL;
+    cancel.price=-(order.price??0);
+    cancel.user_id=userID;
+    await this.reserveRepo.create(cancel);
+    await this.balanceRepo.updateById(userID, {balance: balance + (cancel.price ?? 0)});
     //await this.reserveRepo.deleteById(orderID);
-    return
+    return cancel
   }
 
   /**
@@ -327,9 +355,15 @@ export class OpenApiController {
     },
     description: 'Get reserve balance',
     required: true,
-  }) _requestBody: BalanceReserve): Promise<unknown> {
-    let reserved = await this.reserveRepo.findById(_requestBody.order_id);
-    return reserved;
+  }) _requestBody: BalanceReserve): Promise<BalanceReserve[]> {
+    let filter={
+      where: {
+        order_id: _requestBody.order_id,
+      }
+    };
+    let orders=await this.reserveRepo.find(filter);
+    //let reserved = await this.reserveRepo.findById(_requestBody.order_id);
+    return orders;
   }
 
   private async calcBalance(user_id: number):Promise<number> {
