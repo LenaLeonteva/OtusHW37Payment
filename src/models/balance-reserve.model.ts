@@ -19,9 +19,17 @@ export class BalanceReserve extends Entity {
   @property({
     type: 'string',
     id: true,
-    generated: false,
+    generated: true,
   })
-  order_id: string;
+  id?: string;
+
+  /**
+   *
+   */
+  @property({
+    type: 'string',
+  })
+  order_id?: string;
 
   /**
    *
@@ -34,13 +42,16 @@ export class BalanceReserve extends Entity {
   })
   user_id?: number;
 
+  @property({
+    type: 'string',
+  })
+  operation?: string;
   /**
    *
    */
   @property({
     type: 'number',
     format: 'float',
-    minimum: 0,
     maximum: 3.402823669209385e+38,
   })
   price?: number;
