@@ -1,6 +1,6 @@
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {Response, RestBindings, api, operation, requestBody} from '@loopback/rest';
+import {Response, RestBindings, api, operation, param, requestBody} from '@loopback/rest';
 import {BalanceReserve} from '../models/balance-reserve.model';
 import {Balance} from '../models/balance.model';
 import {BalanceRepository, BalanceReserveRepository} from '../repositories';
@@ -133,39 +133,37 @@ export class OpenApiController {
      *
      * @param _requestBody Created courier
      */
-  @operation('get', '/balance/add', {
+  @operation('get', '/balance/{userID}', {
     operationId: 'getBalance',
     responses: {
       '200': {
         description: 'OK',
       },
     },
-    requestBody: {
-      content: {
-        'application/json': {
-          schema: {
-            $ref: '#/components/schemas/Balance',
-          },
-        },
-      },
-      description: 'Created courier',
-      required: true,
-    },
-  })
-  async getBalance(@requestBody({
-    content: {
-      'application/json': {
+    parameters: [
+      {
+        name: 'userID',
+        in: 'path',
+        description: 'ID of order',
+        required: true,
         schema: {
-          $ref: '#/components/schemas/Balance',
+          type: 'number',
         },
       },
-    },
-    description: 'Created balance',
+    ],
+  })
+  async getBalance(@param({
+    name: 'userID',
+    in: 'path',
+    description: 'ID of order',
     required: true,
-  }) _requestBody: Balance): Promise<unknown> {
-    let result = await this.balanceRepo.findById(_requestBody.user_id);
-    let calcBalance=await this.calcBalance(_requestBody.user_id);
-    if (calcBalance!=result.balance) this.balanceRepo.updateById(_requestBody.user_id,{balance: calcBalance});
+    schema: {
+      type: 'number',
+    },
+  }) userID: number): Promise<unknown> {
+    let result = await this.balanceRepo.findById(userID);
+    let calcBalance=await this.calcBalance(userID);
+    if (calcBalance!=result.balance) this.balanceRepo.updateById(userID,{balance: calcBalance});
     result.balance=calcBalance;
     return result
   }
