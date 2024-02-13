@@ -6,6 +6,7 @@ import {Balance} from '../models/balance.model';
 import {BalanceRepository, BalanceReserveRepository} from '../repositories';
 import {v4 as uuidv4} from 'uuid';
 import { OPS } from '../config';
+import { use } from 'should';
 
 
 /**
@@ -324,45 +325,113 @@ export class OpenApiController {
     *
     * @param _requestBody Created reserve balance
     */
-  @operation('get', '/balance/reserve', {
+  @operation('get', '/balance/{userID}/reserve/{orderID}', {
     operationId: 'getReserve',
     responses: {
       '200': {
         description: 'OK',
       },
     },
-    requestBody: {
-      content: {
-        'application/json': {
-          schema: {
-            $ref: '#/components/schemas/BalanceReserve',
-          },
-        },
-      },
-      description: 'Created reserve balance',
-      required: true,
-    },
-  })
-  async getReserve(@requestBody({
-    content: {
-      'application/json': {
+    parameters: [
+      {
+        name: 'orderID',
+        in: 'path',
+        description: 'ID of order',
+        required: true,
         schema: {
-          $ref: '#/components/schemas/BalanceReserve',
+          type: 'string',
         },
       },
-    },
-    description: 'Get reserve balance',
+      {
+        name: 'userID',
+        in: 'path',
+        description: 'ID of user',
+        required: true,
+        schema: {
+          type: 'number',
+        },
+      },
+    ],
+    
+  })
+  async getReserve(
+  @param({
+    name: 'userID',
+    in: 'path',
+    description: 'ID of user',
     required: true,
-  }) _requestBody: BalanceReserve): Promise<BalanceReserve[]> {
+    schema: {
+      type: 'number',
+    },
+  }) userID: number,
+  @param({
+    name: 'orderID',
+    in: 'path',
+    description: 'ID of order',
+    required: true,
+    schema: {
+      type: 'string',
+    },
+  }) orderID?: string,
+  ): Promise<BalanceReserve[]> {
     let filter={
       where: {
-        order_id: _requestBody.order_id,
+        order_id: orderID,
+        user_id: userID,
       }
     };
     let orders=await this.reserveRepo.find(filter);
     //let reserved = await this.reserveRepo.findById(_requestBody.order_id);
     return orders;
   }
+
+  /**
+    *
+    *
+    * @param _requestBody Created reserve balance
+    */
+  @operation('get', '/balance/{userID}/reserve', {
+    operationId: 'getReserve',
+    responses: {
+      '200': {
+        description: 'OK',
+      },
+    },
+    parameters: [
+      {
+        name: 'userID',
+        in: 'path',
+        description: 'ID of user',
+        required: true,
+        schema: {
+          type: 'number',
+        },
+      },
+    ],
+    
+  })
+  async getReserves(
+  @param({
+    name: 'userID',
+    in: 'path',
+    description: 'ID of user',
+    required: true,
+    schema: {
+      type: 'number',
+    },
+  }) userID: number,
+
+  ): Promise<BalanceReserve[]> {
+    let filter={
+      where: {
+        user_id: userID,
+      }
+    };
+    let orders=await this.reserveRepo.find(filter);
+    //let reserved = await this.reserveRepo.findById(_requestBody.order_id);
+    return orders;
+  }
+
 
   private async calcBalance(user_id: number):Promise<number> {
     const filter ={
